@@ -588,7 +588,14 @@ class LazyDict(dict):
             self.doc[key] = []
             value = LazyList(self.doc[key], item_type=self.item_type, init_vals=value)
         else:
-            self.doc.update({key: value_to_json(value, item_type=self.item_type) })
+            # When having dict as dynamic properties LazyDict has no doc
+            # and this fails.
+            # Quick fix for this to work is to 'fake it' as a doc itself.
+            # Adding 'doc_type' to it.
+            try:
+                self.doc.update({key: value_to_json(value, item_type=self.item_type) })
+            except AttributeError:
+                self.doc = ({'doc_type':'', key: value })
         super(LazyDict, self).__setitem__(key, value)
 
     def __delitem__(self, key):
